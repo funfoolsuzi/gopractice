@@ -4,6 +4,7 @@ import (
 	txng "testing"
 
 	. "github.com/funfoolsuzi/gopractice/place"
+	"github.com/stretchr/testify/assert"
 )
 
 var tacoma Place = Place{Name: "Tacoma", Coordinate: Coordinate{Lat: 47.2529, Long: -122.4443}}
@@ -20,16 +21,12 @@ func TestString(t *txng.T) {
 
 	for _, c := range cases {
 		got := c.in.String()
-		if got != c.want {
-			t.Errorf("Place.String()\n result: %v \n want: %v", got, c.want)
-		}
+		assert.Equal(t, c.want, got)
 	}
 }
 
 func TestDistanceTo(t *txng.T) {
 	got := tacoma.DistanceTo(seattle.Coordinate)
 	want := 40.1815530370966
-	if got != want {
-		t.Errorf("Place.DistanceTo(pl *Place)\n result:%v \n want: %v", got, want)
-	}
+	assert.Equal(t, want, got)
 }

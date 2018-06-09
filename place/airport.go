@@ -11,10 +11,18 @@ type Airport struct {
 	Aircrafts []Aircraft
 }
 
-// RemoveAircraftByIndex removes an aircraft
-func (a *Airport) RemoveAircraftByIndex(index int) (ac Aircraft, err error) {
-	if index > len(a.Aircrafts)-1 {
-		err = fmt.Errorf("The index of the aircraft being removed is out of range") // add more error info
+// RemoveAircraftByID removes an aircraft
+func (a *Airport) RemoveAircraftByID(id int) (ac Aircraft, err error) {
+	index := -1
+
+	for idx, ac := range a.Aircrafts {
+		if ac.ID == id {
+			index = idx
+		}
+	}
+
+	if index == -1 {
+		err = &NonExistAircraftError{AirportName: a.Name, AircraftID: id}
 		return
 	}
 
@@ -25,54 +33,72 @@ func (a *Airport) RemoveAircraftByIndex(index int) (ac Aircraft, err error) {
 	return
 }
 
-// ScheduleFlight will schedule an certain aircraft parked in the airport and fly it after certain hours.
-// Return whether the scheduling succeed.
-func (a *Airport) ScheduleFlight(ac *Aircraft, dest Airport, sec float64) error {
-	// check if aircraft is parked in this airport
-	idx := -1
-	fmt.Printf("%p\n", ac)
-	for i, v := range a.Aircrafts {
-		fmt.Printf("%p\n", &v)
-		if ac == &v {
-			idx = i
+// AddAircraft will add an aircraft to the airport
+func (a *Airport) AddAircraft(ac *Aircraft) error {
+	// check duplicates
+	for _, v := range a.Aircrafts {
+		if v.ID == ac.ID {
+			return &DuplicateAircraftError{AirportName: a.Name, AircraftID: v.ID}
 		}
 	}
+	a.Aircrafts = append(a.Aircrafts, *ac)
+	return nil
+}
 
-	if idx == -1 {
-		return fmt.Errorf("The aircraft being scheduled to fly is not in this airport(%s)", a.Name)
+// FlyAircraft will schedule an certain aircraft parked in the airport and fly it after certain hours.
+// Return whether the scheduling succeed.
+func (a *Airport) FlyAircraft(acID int, dest *Airport) error {
+	// remove the aircraft
+	acft, err := a.RemoveAircraftByID(acID)
+	if err != nil {
+		return err
 	}
+	fmt.Printf("Aircraft %d has taken off to fly from %s to %s\n", acft.ID, a.Name, dest.Name)
 
+	// set up variables
 	dis := a.DistanceTo(dest.Coordinate)
-
-	flightDur := dis / float64(ac.Speed)
+	flightDur := dis / float64(acft.Speed)
 	rateLat := (dest.Lat - a.Lat) / flightDur
 	rateLong := (dest.Long - a.Long) / flightDur
 
-	fmt.Printf("It will take %f seconds for aircraft %d to fly from %s to %s", flightDur, ac.ID, a.Name, dest.Name)
+	// reset acft status
+	acft.Coordinate = a.Coordinate
+	acft.Status = Flying
 
-	go func() error {
-		time.Sleep(time.Duration(sec) * time.Second)
-		acft, err := a.RemoveAircraftByIndex(idx)
+	for ; flightDur > 1; flightDur-- {
+		time.Sleep(time.Second)
+		acft.Lat += rateLat
+		acft.Long += rateLong
+		fmt.Printf("Aircraft %d has just moved to %f, %f.\n", acft.ID, acft.Lat, acft.Long)
+	}
+	time.Sleep(time.Duration(flightDur) * time.Second)
+	fmt.Printf("Aircraft %d has just arrived %s(%v) from %s.\n", acft.ID, dest.Name, dest.Coordinate, a.Name)
+	acft.Coordinate = dest.Coordinate
+	acft.Status = Landed
 
-		acft.Coordinate = a.Coordinate
-		acft.Status = Flying
-
-		if err != nil {
-			return err
-		}
-
-		for ; flightDur > 1; flightDur-- {
-			time.Sleep(time.Second)
-			acft.Lat += rateLat
-			acft.Long += rateLong
-			fmt.Printf("Aircraft %d has just moved to %f, %f", acft.ID, acft.Lat, acft.Long)
-		}
-
-		time.Sleep(time.Duration(flightDur) * time.Second)
-		acft.Coordinate = dest.Coordinate
-
-		return nil
-	}()
+	if err := dest.AddAircraft(&acft); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+// DuplicateAircraftError is an error emited by AddAircraft
+type DuplicateAircraftError struct {
+	AirportName string
+	AircraftID  int
+}
+
+func (err *DuplicateAircraftError) Error() string {
+	return fmt.Sprintf("Airport(%s) has a duplicate aircraft(ID:%d)", err.AirportName, err.AircraftID)
+}
+
+// NonExistAircraftError is an error emited by RemoveAircraftByID
+type NonExistAircraftError struct {
+	AirportName string
+	AircraftID  int
+}
+
+func (err *NonExistAircraftError) Error() string {
+	return fmt.Sprintf("Airport(%s) does not have aircraft(ID:%d)", err.AirportName, err.AircraftID)
 }
