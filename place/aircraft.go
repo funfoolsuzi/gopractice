@@ -1,5 +1,9 @@
 package place
 
+import (
+	"fmt"
+)
+
 // AircraftStatus describes the status of an airplane
 type AircraftStatus int
 
@@ -17,4 +21,22 @@ type Aircraft struct {
 	Model  string
 	Speed  int // km/hour
 	Status AircraftStatus
+}
+
+// StatusStr will return the status in string format
+func (ac *Aircraft) StatusStr() string {
+	switch ac.Status {
+	case Landed:
+		return "Landed"
+	case Flying:
+		return "Flying"
+	case Maintenance:
+		return "Maintenance"
+	default:
+		return ""
+	}
+}
+
+func (ac *Aircraft) String() string {
+	return fmt.Sprintf("Aircraft %d(ID) - {Coords: %v, Model: %s, Speed: %d km/hour, Status: %s}", ac.ID, ac.Coordinate, ac.Model, ac.Speed, ac.StatusStr())
 }

@@ -108,3 +108,27 @@ func TestFlyAircraft(t *testing.T) {
 		}
 	}
 }
+
+func TestAirportString(t *testing.T) {
+	cases := []struct {
+		airport Airport
+		expect  string
+	}{
+		{airport: Airport{Place: Place{Coordinate: Coordinate{Lat: 34.5253, Long: 113.8462}, Name: "Xinzheng"}, Aircrafts: []Aircraft{
+			Aircraft{ID: 3},
+			Aircraft{ID: 4},
+			Aircraft{ID: 5},
+		}}, expect: "Airport Xinzheng at (34.5253, 113.8462) has 3 aircrafts"},
+		{airport: Airport{Place: Place{Coordinate: Coordinate{Lat: 37.4602, Long: 126.4407}, Name: "Incheon"}, Aircrafts: []Aircraft{
+			Aircraft{ID: 6},
+			Aircraft{ID: 7},
+			Aircraft{ID: 8},
+			Aircraft{ID: 9},
+			Aircraft{ID: 10},
+		}}, expect: "Airport Incheon at (37.4602, 126.4407) has 5 aircrafts"},
+	}
+
+	for _, c := range cases {
+		assert.Equal(t, c.expect, c.airport.String())
+	}
+}

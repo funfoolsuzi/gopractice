@@ -83,6 +83,13 @@ func (a *Airport) FlyAircraft(acID int, dest *Airport) error {
 	return nil
 }
 
+func (a *Airport) String() string {
+	desciption := fmt.Sprintf("Airport %s at (%.4f, %.4f) has %d aircrafts", a.Name, a.Lat, a.Long, len(a.Aircrafts))
+	return desciption
+}
+
+//// Errors
+
 // DuplicateAircraftError is an error emited by AddAircraft
 type DuplicateAircraftError struct {
 	AirportName string

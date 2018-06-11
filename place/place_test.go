@@ -10,7 +10,7 @@ import (
 var tacoma Place = Place{Name: "Tacoma", Coordinate: Coordinate{Lat: 47.2529, Long: -122.4443}}
 var seattle Place = Place{Name: "Seattle", Coordinate: Coordinate{Lat: 47.6062, Long: -122.3321}}
 
-func TestString(t *txng.T) {
+func TestPlaceString(t *txng.T) {
 	cases := []struct {
 		in   Place
 		want string

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -40,7 +41,61 @@ func StartProgram() {
 	}{
 		{'q', "[q]uit", func() bool { return false }},
 		{'l', "[l]ist", func() bool {
-			fmt.Println(airports)
+			for i, ap := range airports {
+				fmt.Printf("  %d - %s\n", i+1, ap.String())
+				for j, ac := range ap.Aircrafts {
+					fmt.Printf("     %d - %s\n", j+1, ac.String())
+				}
+			}
+			return true
+		}},
+		{'f', "[f]ly", func() bool {
+			var origin, dest *Airport
+			var acID int
+			for {
+				fmt.Print("Origin airport name >>>")
+				if scanner.Scan() {
+					originName := scanner.Text()
+					for i, ac := range airports {
+						if ac.Name == originName {
+							origin = &airports[i]
+							break
+						}
+					}
+					if origin != nil {
+						break
+					}
+					fmt.Println("Invalid. Try again.")
+				}
+			}
+			for {
+				fmt.Print("Aircraft ID >>>")
+				if scanner.Scan() {
+					idstr := scanner.Text()
+					if id, err := strconv.Atoi(idstr); err == nil {
+						acID = id
+						break
+					}
+					fmt.Println("Invalid ID. Try again.")
+				}
+			}
+			for {
+				fmt.Print("Destination airport name >>>")
+				if scanner.Scan() {
+					destName := scanner.Text()
+					for i, ac := range airports {
+						if ac.Name == destName {
+							dest = &airports[i]
+							break
+						}
+					}
+					if dest != nil {
+						break
+					}
+					fmt.Println("Invalid. Try again.")
+				}
+			}
+			go origin.FlyAircraft(acID, dest)
 			return true
 		}},
 	}
